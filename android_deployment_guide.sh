@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Alternative Android Deployment Script
+# Since buildozer can be complex, here are alternative approaches
+
+echo "Android Deployment Options for Task Dashboard"
+echo "============================================"
+echo ""
+echo "Option 1: Use PWA (Progressive Web App) - RECOMMENDED"
+echo "Your Flask app already has PWA features. Deploy to a server and access via mobile browser."
+echo ""
+echo "Option 2: Use a cloud service like:"
+echo "- Heroku (free tier available)"
+echo "- Railway"
+echo "- Render"
+echo "- PythonAnywhere"
+echo ""
+echo "Option 3: Manual APK creation (advanced):"
+echo "1. Install Android Studio"
+echo "2. Create a WebView-based Android app"
+echo "3. Embed your Flask app URL"
+echo ""
+echo "For immediate testing on Android phone:"
+echo "1. Run your Flask app: python app.py"
+echo "2. Make it accessible from your phone:"
+echo "   - Use ngrok: ngrok http 5000"
+echo "   - Or run on 0.0.0.0: python app.py --host 0.0.0.0"
+echo "3. Access from phone browser"
+echo ""
+echo "Current status: Buildozer setup completed but APK build needs more configuration."

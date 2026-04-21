@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Task Dashboard - Android Installation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .installation-methods {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .method {
+            border: 2px solid #f0f0f0;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .method:hover {
+            border-color: #667eea;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .method h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .method-icon {
+            font-size: 24px;
+        }
+
+        .method ol {
+            list-style-position: inside;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .method li {
+            margin-bottom: 8px;
+        }
+
+        .qr-section {
+            text-align: center;
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .qr-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .qr-code {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .qr-instruction {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .direct-url {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .direct-url label {
+            display: block;
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .direct-url input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .status {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .status-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .status-item .label {
+            color: #666;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .status-item .value {
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .features {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .features ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .features li {
+            padding: 8px;
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .features li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .button-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .button-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .button-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .status {
+                grid-template-columns: 1fr;
+            }
+
+            .features ul {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Task Dashboard</h1>
+            <p class="subtitle">Install on Your Android Phone</p>
+        </header>
+
+        <!-- Status Section -->
+        <div class="status">
+            <div class="status-item">
+                <div class="label">Server Status</div>
+                <div class="value" id="server-status">🟢 Online</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Network Port</div>
+                <div class="value">5001</div>
+            </div>
+        </div>
+
+        <!-- Direct URL Section -->
+        <div class="direct-url">
+            <label>Direct Access URL</label>
+            <input type="text" value="http://192.168.0.4:5001" readonly>
+            <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                Enter this URL on your Android phone's browser
+            </div>
+        </div>
+
+        <!-- QR Code Section -->
+        <div class="qr-section">
+            <h3>📱 Scan QR Code</h3>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                Show this on your computer screen and scan with your Android phone
+            </p>
+            <img src="qr_task_dashboard.png" alt="Task Dashboard QR Code" class="qr-code" id="qr-code">
+            <div class="qr-instruction">
+                📸 Open Camera on Android phone → Point at QR code → Tap notification
+            </div>
+        </div>
+
+        <!-- Installation Methods -->
+        <div class="installation-methods">
+            <div class="method">
+                <h2><span class="method-icon">🔗</span> Method 1: Direct Link</h2>
+                <ol>
+                    <li>Copy the URL from above</li>
+                    <li>Open browser on Android phone</li>
+                    <li>Paste URL in address bar</li>
+                    <li>Press Enter to load</li>
+                    <li>Tap Menu (⋮) → "Add to Home Screen"</li>
+                </ol>
+            </div>
+
+            <div class="method">
+                <h2><span class="method-icon">📷</span> Method 2: QR Code</h2>
+                <ol>
+                    <li>Open Camera app on Android phone</li>
+                    <li>Point at QR code above</li>
+                    <li>Tap notification/link</li>
+                    <li>App opens in browser</li>
+                    <li>Tap Menu (⋮) → "Add to Home Screen"</li>
+                </ol>
+            </div>
+
+            <div class="method">
+                <h2><span class="method-icon">⚙️</span> Method 3: APK Installation</h2>
+                <ol>
+                    <li>Build APK: <code>./build_android.sh</code></li>
+                    <li>Transfer to Android phone via USB</li>
+                    <li>Open file manager, find APK</li>
+                    <li>Tap to install</li>
+                    <li>Allow installation and complete</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="features">
+            <h3>✨ Features Available</h3>
+            <ul>
+                <li>📝 Add Tasks</li>
+                <li>✏️ Edit Tasks</li>
+                <li>🗑️ Delete Tasks</li>
+                <li>✓ Mark Complete</li>
+                <li>📅 Calendar View</li>
+                <li>📊 Reports</li>
+                <li>🎤 Voice Input</li>
+                <li>💬 Notes</li>
+            </ul>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="method">
+            <h2><span class="method-icon">🔧</span> Troubleshooting</h2>
+            <ul style="list-style: none; color: #555; line-height: 1.8;">
+                <li>❌ <strong>Can't access URL?</strong> Ensure phone and computer are on same WiFi</li>
+                <li>❌ <strong>QR code not scanning?</strong> Hold camera steady 10-15cm away</li>
+                <li>❌ <strong>Page loading slow?</strong> Close other apps, restart server</li>
+                <li>❌ <strong>"Install" option missing?</strong> Try using Chrome browser</li>
+            </ul>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button class="button button-primary" onclick="copyURL()">📋 Copy URL</button>
+            <button class="button button-secondary" onclick="showInstructions()">📖 Instructions</button>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>✅ Server running on: 192.168.0.4:5001</p>
+            <p>💡 For help, check the troubleshooting section above</p>
+        </div>
+    </div>
+
+    <script>
+        // Copy URL to clipboard
+        function copyURL() {
+            const url = "http://192.168.0.4:5001";
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ URL copied to clipboard!\n\nPaste in Android browser address bar');
+            }).catch(() => {
+                // Fallback
+                const input = document.querySelector('input');
+                input.select();
+                document.execCommand('copy');
+                alert('✅ URL copied to clipboard!');
+            });
+        }
+
+        // Show detailed instructions
+        function showInstructions() {
+            alert(`📱 COMPLETE INSTALLATION GUIDE\n\n` +
+                `1️⃣ USING QR CODE:\n` +
+                `   • Show QR code on screen\n` +
+                `   • Open Camera on Android\n` +
+                `   • Scan the code\n` +
+                `   • Tap link that appears\n` +
+                `   • Menu → Add to Home Screen\n\n` +
+                `2️⃣ USING DIRECT LINK:\n` +
+                `   • Copy URL above\n` +
+                `   • Open Chrome on Android\n` +
+                `   • Paste in address bar\n` +
+                `   • Menu → Add to Home Screen\n\n` +
+                `3️⃣ USING APK:\n` +
+                `   • Run: ./build_android.sh\n` +
+                `   • Transfer APK to phone\n` +
+                `   • Tap to install\n\n` +
+                `✨ Default features work immediately!\n` +
+                `🔧 For issues, check WiFi connection`);
+        }
+
+        // Check server status
+        function checkServerStatus() {
+            fetch('http://127.0.0.1:5001/api/stats')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('server-status').textContent = '🟢 Online';
+                })
+                .catch(() => {
+                    document.getElementById('server-status').textContent = '🔴 Offline';
+                });
+        }
+
+        // Check status on load
+        window.addEventListener('load', () => {
+            checkServerStatus();
+            // Re-check every 10 seconds
+            setInterval(checkServerStatus, 10000);
+        });
+    </script>
+</body>
+</html>

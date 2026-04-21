@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="task-manager-dashboard">
+    <div class="manager-header">
+        <div>
+            <h2>Task Manager</h2>
+            <p class="manager-subtitle">A cleaner task table inspired by Microsoft Task Manager.</p>
+        </div>
+        <div class="manager-actions">
+            <div class="date-filter">
+                <label for="dateFilter">Date:</label>
+                <input type="date" id="dateFilter" value="{{ filter_date }}" class="date-input">
+            </div>
+            <a href="{{ url_for('add_task') }}" class="btn btn-primary">+ New Task</a>
+        </div>
+    </div>
+
+    <div class="manager-grid">
+        <aside class="manager-sidebar">
+            <div class="panel panel-summary">
+                <div class="panel-title">Overview</div>
+                <div class="overview-list">
+                    <div class="overview-item overview-filter-item" data-filter="all">
+                        <span>Total Tasks</span>
+                        <strong>{{ total_tasks }}</strong>
+                    </div>
+                    <div class="overview-item overview-filter-item" data-filter="completed">
+                        <span>Completed</span>
+                        <strong>{{ completed_tasks }}</strong>
+                    </div>
+                    <div class="overview-item overview-filter-item" data-filter="pending">
+                        <span>Pending</span>
+                        <strong>{{ total_tasks - completed_tasks }}</strong>
+                    </div>
+                    <div class="overview-item">
+                        <span>Very Important</span>
+                        <strong>{{ priority_counts.very_important }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-breakdown">
+                <div class="panel-title">Priority Breakdown</div>
+                <div class="priority-breakdown">
+                    <div class="priority-bar very-important"><span>Very Important</span><strong>{{ priority_counts.very_important }}</strong></div>
+                    <div class="priority-bar should-do"><span>Should Do</span><strong>{{ priority_counts.should_do }}</strong></div>
+                    <div class="priority-bar normal"><span>Normal</span><strong>{{ priority_counts.normal }}</strong></div>
+                    <div class="priority-bar low"><span>Low</span><strong>{{ priority_counts.low }}</strong></div>
+                </div>
+            </div>
+
+            <div class="panel panel-calendar">
+                <div class="panel-title">Tasks Calendar</div>
+                <div class="mini-calendar" id="calendar"></div>
+                <p class="calendar-note">Click a date to filter tasks.</p>
+            </div>
+        </aside>
+
+        <section class="manager-main">
+            <div class="panel panel-table">
+                <div class="panel-title table-title">Tasks for <span id="displayDate">{{ filter_date }}</span></div>
+                <div class="table-scroll">
+                    <table class="task-table">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Due</th>
+                                <th>Time</th>
+                                <th>Priority</th>
+                                <th>Meeting</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if tasks %}
+                                {% for task in tasks %}
+                                    <tr class="task-row {% if task.completed %}completed{% endif %}" data-task-id="{{ task.id }}">
+                                        <td class="task-name-cell">
+                                            <div class="task-name">{{ task.title }}</div>
+                                            {% if task.description %}
+                                                <div class="task-description">{{ task.description }}</div>
+                                            {% endif %}
+                                            {% if task.get_comments() %}
+                                                <div class="task-comments-preview">
+                                                    <div class="task-comments-summary">💬 {{ task.get_comments() | length }} comment{{ 's' if task.get_comments() | length != 1 else '' }}</div>
+                                                    <div class="task-comment-list">
+                                                        {% for comment in task.get_comments()[-2:] %}
+                                                            <div class="task-comment-item">{{ comment }}</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ task.due_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ task.get_time_display() or '—' }}</td>
+                                        <td>{{ task.get_priority_display() }}</td>
+                                        <td>
+                                            {% if task.meeting_email %}
+                                                {{ task.meeting_email }}
+                                                {% if task.get_guest_emails() %}
+                                                    <div class="task-guest-compact">+ {{ task.get_guest_emails() | join(', ') }}</div>
+                                                {% endif %}
+                                            {% elif task.google_meet_link %}
+                                                <a href="{{ task.google_meet_link }}" target="_blank">Google Meet</a>
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                            {% if task.get_comments() %}
+                                                <div class="task-latest-comment">💬 {{ task.get_comments()[-1] }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <label class="status-switch">
+                                                <input type="checkbox" class="task-toggle" data-task-id="{{ task.id }}" {% if task.completed %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                                <span class="status-label">{{ 'Completed' if task.completed else 'Pending' }}</span>
+                                            </label>
+                                        </td>
+                                        <td class="task-actions">
+                                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn-icon" title="Edit">✏️</a>
+                                            <button type="button" class="btn-icon btn-comment" title="Comment" onclick="openCommentInput({{ task.id }})">💬</button>
+                                            <a href="{{ url_for('export_task_calendar', task_id=task.id) }}" class="btn-icon" title="Add to Calendar" target="_blank">📅</a>
+                                            <a href="{{ url_for('schedule_meeting', task_id=task.id) }}" class="btn-icon" title="Schedule" target="_blank">🗓️</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="empty-state-table">
+                                        No tasks for this date. Add a task to get started.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Date filter functionality
+        const dateFilter = document.getElementById('dateFilter');
+        const displayDate = document.getElementById('displayDate');
+        
+        dateFilter.addEventListener('change', function() {
+            displayDate.textContent = this.value;
+            window.location.href = `{{ url_for('index') }}?date=${this.value}`;
+        });
+
+        // Task completion toggle
+        const taskToggles = document.querySelectorAll('.task-toggle');
+        taskToggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const taskId = this.getAttribute('data-task-id');
+                toggleTaskComplete(taskId);
+            });
+        });
+
+        // Inline status controls
+        if (typeof bindTaskStatusControls === 'function') {
+            bindTaskStatusControls();
+        }
+
+        // Build mini calendar
+        buildMiniCalendar({{ dates_with_tasks | tojson }}, '{{ filter_date }}');
+
+        // Add quick filter from summary cards
+        const statusFilterCards = document.querySelectorAll('.overview-filter-item');
+        statusFilterCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const filter = this.dataset.filter;
+                setTaskListFilter(filter);
+                statusFilterCards.forEach(c => c.classList.toggle('active-filter', c === this));
+            });
+        });
+    });
+
+    function setTaskListFilter(filter) {
+        const rows = document.querySelectorAll('.task-row');
+        rows.forEach(row => {
+            if (filter === 'all') {
+                row.style.display = '';
+            } else if (filter === 'completed') {
+                row.style.display = row.classList.contains('completed') ? '' : 'none';
+            } else if (filter === 'pending') {
+                row.style.display = row.classList.contains('completed') ? 'none' : '';
+            }
+        });
+    }
+
+    function toggleTaskComplete(taskId) {
+        fetch(`/complete/${taskId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+                taskCard.classList.toggle('completed');
+                location.reload(); // Refresh stats
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function openCommentInput(taskId) {
+        const comment = prompt('Add a comment for this task:');
+        if (!comment || !comment.trim()) {
+            return;
+        }
+
+        fetch(`/comment/${taskId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ comment: comment.trim() })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Comment added successfully', 'success');
+                window.location.reload();
+            } else {
+                showNotification(data.error || 'Unable to add comment', 'error');
+            }
+        })
+        .catch(() => {
+            showNotification('Network error while adding comment', 'error');
+        });
+    }
+
+    function buildMiniCalendar(datesWithTasks, currentDate) {
+        const calendar = document.getElementById('calendar');
+        const today = new Date(currentDate);
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        
+        // Clear calendar
+        calendar.innerHTML = '';
+        
+        // Month/Year header
+        const header = document.createElement('div');
+        header.className = 'calendar-header';
+        header.textContent = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        calendar.appendChild(header);
+        
+        // Day names
+        const dayNames = document.createElement('div');
+        dayNames.className = 'calendar-days';
+        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+            const dayEl = document.createElement('div');
+            dayEl.textContent = day;
+            dayNames.appendChild(dayEl);
+        });
+        calendar.appendChild(dayNames);
+        
+        // Days grid
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'calendar-grid';
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // Empty cells for days before month starts
+        for (let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'calendar-day empty';
+            daysGrid.appendChild(emptyCell);
+        }
+        
+        // Days of month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            dayEl.textContent = day;
+            
+            // Check if this date has tasks
+            if (datesWithTasks.some(d => d === dateStr)) {
+                dayEl.classList.add('has-tasks');
+            }
+            
+            // Highlight current date
+            if (dateStr === currentDate) {
+                dayEl.classList.add('current');
+            }
+            
+            // Click to filter
+            dayEl.addEventListener('click', function() {
+                dateFilter.value = dateStr;
+                dateFilter.dispatchEvent(new Event('change'));
+            });
+            
+            daysGrid.appendChild(dayEl);
+        }
+        
+        calendar.appendChild(daysGrid);
+    }
+</script>
+{% endblock %}

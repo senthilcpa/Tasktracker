@@ -1,0 +1,100 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'buildozer.spec'
+      - 'main.py'
+      - 'mobile_app.py'
+      - 'app.py'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          openjdk-17-jdk \
+          zlib1g-dev \
+          libncurses5-dev \
+          libncursesw5-dev \
+          libtinfo5 \
+          cmake \
+          libffi-dev \
+          libssl-dev \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          unzip \
+          wget
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install Cython==0.29.36
+        pip install buildozer==1.5.0
+        pip install kivy==2.2.1
+
+    - name: Verify buildozer installation
+      run: |
+        buildozer --version
+        python -c "import kivy; print('Kivy version:', kivy.__version__)"
+        python -c "import buildozer; print('Buildozer imported successfully')"
+
+    - name: Clean previous builds
+      run: |
+        rm -rf .buildozer
+        rm -rf bin/
+
+    - name: Initialize buildozer
+      run: |
+        buildozer init || echo "Buildozer already initialized"
+
+    - name: Build APK (Debug)
+      run: |
+        export BUILDOZER_ALLOW_ROOT=1
+        echo "Starting APK build..."
+        buildozer android debug
+      continue-on-error: false
+
+    - name: List build artifacts
+      run: |
+        echo "=== Build Directory Contents ==="
+        ls -la bin/ 2>/dev/null || echo "bin directory not found"
+        echo "=== APK Files ==="
+        find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
+        echo "=== Build Logs ==="
+        find .buildozer -name "*.log" -type f 2>/dev/null | head -5 | xargs -I {} sh -c 'echo "=== {} ==="; cat {} | tail -20' || echo "No build logs found"
+
+    - name: Upload APK artifact
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: task-dashboard-apk
+        path: bin/*.apk
+        retention-days: 30
+
+    - name: Upload build logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: |
+          .buildozer/android/platform/python-for-android/build.log
+          .buildozer/android/platform/python-for-android/*.log
+        if-no-files-found: ignore

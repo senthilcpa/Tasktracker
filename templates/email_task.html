@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Email Task - Task Dashboard{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <h2>📧 Send Task as Email Appointment</h2>
+        
+        {% if success %}
+        <div class="alert alert-success">
+            {{ success }}
+        </div>
+        {% endif %}
+        
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <div class="task-preview">
+            <h3>Task Details</h3>
+            <div class="task-info">
+                <p><strong>Title:</strong> {{ task.title }}</p>
+                <p><strong>Description:</strong> {{ task.description or 'No description' }}</p>
+                <p><strong>Due Date:</strong> {{ task.due_date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>Priority:</strong> {{ task.get_priority_display() }}</p>
+                <p><strong>Schedule:</strong> {{ task.get_recurrence_info() }}</p>
+                <p><strong>Status:</strong> {{ 'Completed' if task.completed else 'Pending' }}</p>
+            </div>
+        </div>
+        
+        <form method="POST" class="task-form">
+            <div class="form-group">
+                <label for="email">Recipient Email *</label>
+                <input type="email" id="email" name="email" placeholder="recipient@example.com" value="{{ task.meeting_email or '' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="guest_emails">Additional Guest Emails</label>
+                <input type="text" id="guest_emails" name="guest_emails" value="{{ task.get_guest_emails() | join(', ') }}" readonly>
+                <small class="help-text">Existing guest emails are included in the invitation when the email is sent.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="google_meet_link">Google Meet Link</label>
+                <input type="url" id="google_meet_link" name="google_meet_link" placeholder="https://meet.google.com/new" value="{{ task.google_meet_link or '' }}">
+                <small class="help-text">Optional: include a Google Meet or conference call link in the invitation.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="sender_email">Your Email *</label>
+                <input type="email" id="sender_email" name="sender_email" placeholder="your-email@gmail.com" required>
+                <small class="help-text">Gmail address recommended for best compatibility</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="sender_password">Email Password *</label>
+                <input type="password" id="sender_password" name="sender_password" placeholder="Your email password" required>
+                <small class="help-text">For Gmail, use an App Password if 2FA is enabled</small>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    📧 Send as Appointment
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+        
+        <div class="email-info">
+            <h4>📋 What happens when you send this?</h4>
+            <ul>
+                <li>The task will be sent as an email with a calendar attachment (.ics file)</li>
+                <li>The recipient can import the .ics file into their calendar application</li>
+                <li>The task will appear as a calendar event/appointment</li>
+                <li>Recurring tasks will be properly handled in the calendar</li>
+            </ul>
+            
+            <h4>🔒 Security Note</h4>
+            <p>Your email credentials are only used temporarily to send this email and are not stored anywhere.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

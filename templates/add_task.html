@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Add Task - Task Dashboard{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <h2>Create New Task</h2>
+        
+        <form method="POST" class="task-form">
+            <!-- Comprehensive Voice Input -->
+            <div class="form-group">
+                <label for="comprehensive-input">🎤 Quick Task Creation</label>
+                <div class="comprehensive-input-container">
+                    <textarea id="comprehensive-input" placeholder="Say something like: 'Buy groceries daily should do priority' or 'Call dentist tomorrow very important'" rows="2" class="comprehensive-textarea"></textarea>
+                    <button type="button" class="voice-btn comprehensive-voice-btn" data-target="comprehensive-input" title="Voice input for complete task">
+                        🎤
+                    </button>
+                </div>
+                <small class="help-text">Speak a complete task description including title, schedule, and priority. Example: "Buy groceries daily should do priority"</small>
+            </div>
+
+            <div class="form-group">
+                <label for="title">Task Title *</label>
+                <div class="input-with-voice">
+                    <input type="text" id="title" name="title" placeholder="Enter task title" required maxlength="200" spellcheck="true">
+                    <button type="button" class="voice-btn" data-target="title" title="Voice to text">
+                        🎤
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <div class="input-with-voice">
+                    <textarea id="description" name="description" placeholder="Enter task description (optional)" rows="5" spellcheck="true"></textarea>
+                    <button type="button" class="voice-btn" data-target="description" title="Voice to text">
+                        🎤
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="meeting_email">Meeting Participant Email</label>
+                <input type="email" id="meeting_email" name="meeting_email" placeholder="invitee@example.com">
+                <small class="help-text">Optional: save the participant email as part of this meeting task.</small>
+            </div>
+
+            <div class="form-group">                <label for="guest_emails">Guest Emails</label>
+                <input type="text" id="guest_emails" name="guest_emails" placeholder="guest1@example.com, guest2@example.com">
+                <small class="help-text">Optional: comma-separated list of additional guests for calendar invitations.</small>
+            </div>
+
+            <div class="form-group">                <label for="google_meet_link">Google Meet Link</label>
+                <input type="url" id="google_meet_link" name="google_meet_link" placeholder="https://meet.google.com/new">
+                <small class="help-text">Optional: include a Google Meet or call link for the meeting invitation.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="priority">Priority</label>
+                <select id="priority" name="priority">
+                    <option value="low">Low Priority</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="should_do">Should Do</option>
+                    <option value="very_important">Very Important</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="due_date">Start Date *</label>
+                <input type="date" id="due_date" name="due_date" value="{{ today }}" required>
+            </div>
+
+            <!-- Time Fields -->
+            <div class="form-group">
+                <label for="start_time">Start Time (Optional)</label>
+                <input type="time" id="start_time" name="start_time" placeholder="HH:MM">
+                <small>Specify when the task starts</small>
+            </div>
+
+            <div class="form-group">
+                <label for="end_time">End Time (Optional)</label>
+                <input type="time" id="end_time" name="end_time" placeholder="HH:MM">
+                <small>Specify when the task ends. Duration will be calculated automatically</small>
+            </div>
+
+            <!-- Recurrence Options -->
+            <div class="form-group">
+                <label for="recurrence_type">Schedule Type *</label>
+                <select id="recurrence_type" name="recurrence_type" required>
+                    <option value="once">Single Task (One date only)</option>
+                    <option value="daily">Daily Recurring Task</option>
+                    <option value="selective">Selective Dates (Custom dates)</option>
+                </select>
+            </div>
+
+            <!-- Daily Recurrence Options -->
+            <div id="daily-options" class="recurrence-option" style="display: none;">
+                <div class="form-group">
+                    <label for="recurrence_end_date">Repeat Until (Optional)</label>
+                    <input type="date" id="recurrence_end_date" name="recurrence_end_date" placeholder="Leave blank for no end date">
+                    <small>If blank, task will repeat indefinitely</small>
+                </div>
+            </div>
+
+            <!-- Selective Dates Options -->
+            <div id="selective-options" class="recurrence-option" style="display: none;">
+                <div class="form-group">
+                    <label for="selective_dates">Select Dates (Click to add/remove)</label>
+                    <div id="selective_dates_list" class="date-selector">
+                        <!-- Calendar will be generated here -->
+                    </div>
+                    <input type="hidden" id="selective_dates_input" name="selective_dates">
+                    <small>Select the specific dates you want for this task</small>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Create Task</button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="form-tips">
+        <h3>Schedule Types</h3>
+        <ul>
+            <li><strong>Single Task:</strong> Task appears on one specific date only</li>
+            <li><strong>Daily:</strong> Repeats every day starting from the date you choose. Optionally set an end date</li>
+            <li><strong>Selective:</strong> Choose specific dates when the task should appear</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    const recurrenceTypeSelect = document.getElementById('recurrence_type');
+    const dailyOptions = document.getElementById('daily-options');
+    const selectiveOptions = document.getElementById('selective-options');
+    const selectiveDatesInput = document.getElementById('selective_dates_input');
+    const selectiveDatesList = document.getElementById('selective_dates_list');
+    let selectedSelectiveDates = [];
+
+    // Toggle visibility of recurrence options
+    recurrenceTypeSelect.addEventListener('change', function() {
+        dailyOptions.style.display = this.value === 'daily' ? 'block' : 'none';
+        selectiveOptions.style.display = this.value === 'selective' ? 'block' : 'none';
+        
+        if (this.value === 'selective') {
+            buildSelectiveCalendar();
+        }
+    });
+
+    function buildSelectiveCalendar() {
+        const today = new Date();
+        const nextMonths = 3;
+        selectiveDatesList.innerHTML = '';
+
+        for (let m = 0; m < nextMonths; m++) {
+            const monthDate = new Date(today.getFullYear(), today.getMonth() + m, 1);
+            const monthDiv = document.createElement('div');
+            monthDiv.className = 'month-calendar';
+
+            const monthHeader = document.createElement('div');
+            monthHeader.className = 'month-header';
+            monthHeader.textContent = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            monthDiv.appendChild(monthHeader);
+
+            const daysGrid = document.createElement('div');
+            daysGrid.className = 'days-grid';
+
+            const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getDay();
+            const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+
+            // Empty cells
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                daysGrid.appendChild(emptyCell);
+            }
+
+            // Days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                dayCell.textContent = day;
+                dayCell.dataset.date = dateStr;
+
+                dayCell.addEventListener('click', function() {
+                    if (selectedSelectiveDates.includes(dateStr)) {
+                        selectedSelectiveDates = selectedSelectiveDates.filter(d => d !== dateStr);
+                        dayCell.classList.remove('selected');
+                    } else {
+                        selectedSelectiveDates.push(dateStr);
+                        dayCell.classList.add('selected');
+                    }
+                    updateSelectiveDatesInput();
+                });
+
+                daysGrid.appendChild(dayCell);
+            }
+
+            monthDiv.appendChild(daysGrid);
+            selectiveDatesList.appendChild(monthDiv);
+        }
+    }
+
+    function updateSelectiveDatesInput() {
+        selectiveDatesInput.value = JSON.stringify(selectedSelectiveDates.sort());
+    }
+
+    // Form submission validation
+    document.querySelector('.task-form').addEventListener('submit', function(e) {
+        const title = document.getElementById('title').value.trim();
+        const dueDate = document.getElementById('due_date').value;
+        const recurrenceType = document.getElementById('recurrence_type').value;
+        
+        if (!title || !dueDate) {
+            e.preventDefault();
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        if (recurrenceType === 'selective' && selectedSelectiveDates.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one date for selective scheduling');
+        }
+    });
+</script>
+{% endblock %}

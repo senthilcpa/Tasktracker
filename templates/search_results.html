@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - Task Dashboard{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <h2>Search Tasks</h2>
+    
+    <div class="search-form">
+        <form method="GET" action="{{ url_for('search') }}" class="search-bar">
+            <input type="text" name="q" placeholder="Search tasks..." value="{{ query }}" required>
+            <select name="priority">
+                <option value="">All Priorities</option>
+                <option value="low" {% if priority == 'low' %}selected{% endif %}>Low Priority</option>
+                <option value="normal" {% if priority == 'normal' %}selected{% endif %}>Normal</option>
+                <option value="should_do" {% if priority == 'should_do' %}selected{% endif %}>Should Do</option>
+                <option value="very_important" {% if priority == 'very_important' %}selected{% endif %}>Very Important</option>
+            </select>
+            <select name="status">
+                <option value="">All Statuses</option>
+                <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+    
+    <p class="result-count">Found {{ total }} task(s){% if query %} for "{{ query }}"{% endif %}</p>
+    
+    {% if tasks %}
+        <div class="tasks-list detailed-list">
+            {% for task in tasks %}
+                <div class="task-card {% if task.completed %}completed{% endif %}" data-task-id="{{ task.id }}">
+                    <div class="task-header">
+                        <div class="task-checkbox">
+                            <input type="checkbox" class="task-toggle" {% if task.completed %}checked{% endif %} 
+                                   data-task-id="{{ task.id }}">
+                        </div>
+                        <div class="task-title-section">
+                            <h3 class="task-title">{{ task.title }}</h3>
+                            <p class="task-description">{{ task.description[:100] if task.description else 'No description' }}</p>
+                            <div class="task-meta">
+                                <span class="task-date">📅 {{ task.due_date.strftime('%a, %b %d, %Y') }}</span>
+                                <span class="task-recurrence">🔄 {{ task.get_recurrence_info() }}</span>
+                                <span class="task-priority">⚡ {{ task.get_priority_display() }}</span>
+                                {% if task.meeting_email %}
+                                    <span class="task-meeting">📧 {{ task.meeting_email }}</span>
+                                {% endif %}
+                                {% if task.google_meet_link %}
+                                    <span class="task-link">🔗 <a href="{{ task.google_meet_link }}" target="_blank">Meet</a></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn-icon btn-edit" title="Edit">✏️</a>
+                            <a href="{{ url_for('schedule_meeting', task_id=task.id) }}" class="btn-icon btn-schedule" title="Schedule Meeting" target="_blank">🗓️</a>
+                            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" style="display:inline;">
+                                <button type="submit" class="btn-icon btn-delete" title="Delete" onclick="return confirm('Are you sure?');">🗑️</button>
+                            </form>
+                        </div>
+                        <div class="task-status-panel">
+                            <div class="status-panel-title">Status</div>
+                            <label class="status-radio-label {% if not task.completed %}active{% endif %}">
+                                <input type="radio" name="status-{{ task.id }}" class="status-radio" data-task-id="{{ task.id }}" value="pending" {% if not task.completed %}checked{% endif %}>
+                                <span>Pending</span>
+                            </label>
+                            <label class="status-radio-label {% if task.completed %}active{% endif %}">
+                                <input type="radio" name="status-{{ task.id }}" class="status-radio" data-task-id="{{ task.id }}" value="completed" {% if task.completed %}checked{% endif %}>
+                                <span>Completed</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No tasks match your search criteria.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}

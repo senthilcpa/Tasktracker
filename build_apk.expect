@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+
+set pwd [exec pwd]
+
+spawn docker run -i --rm -v $pwd:/workspace -w /workspace kivy/buildozer android debug
+
+# Handle root warning
+expect "Are you sure you want to continue" {
+    send "y\r"
+}
+
+# Handle any license acceptances
+while {1} {
+    expect {
+        "Accept?" {
+            send "y\r"
+            exp_continue
+        }
+        "Do you accept" {
+            send "y\r"
+            exp_continue
+        }
+        "(y/N)" {
+            send "y\r"
+            exp_continue
+        }
+        eof {
+            break
+        }
+        timeout {
+            break
+        }
+    }
+}
+
+expect eof

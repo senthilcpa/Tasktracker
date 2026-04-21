@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Task Reports - Task Dashboard{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <h2>Task Status Reports</h2>
+    
+    <div class="stats-grid">
+        <a href="{{ url_for('report_tasks', filter_type='all') }}" class="stat-card stat-card-link">
+            <h3>Total Tasks</h3>
+            <div class="stat-number">{{ total_tasks }}</div>
+        </a>
+        
+        <a href="{{ url_for('report_tasks', filter_type='completed') }}" class="stat-card stat-card-link">
+            <h3>Completed</h3>
+            <div class="stat-number completed">{{ completed_tasks }}</div>
+        </a>
+        
+        <a href="{{ url_for('report_tasks', filter_type='pending') }}" class="stat-card stat-card-link">
+            <h3>Pending</h3>
+            <div class="stat-number pending">{{ pending_tasks }}</div>
+        </a>
+        
+        <a href="{{ url_for('report_tasks', filter_type='overdue') }}" class="stat-card stat-card-link">
+            <h3>Overdue</h3>
+            <div class="stat-number overdue">{{ overdue_tasks }}</div>
+        </a>
+        
+        <div class="stat-card">
+            <h3>Completion Rate</h3>
+            <div class="stat-number">{{ completion_rate }}%</div>
+        </div>
+    </div>
+    
+    <div class="recurrence-breakdown">
+        <h3>Tasks by Schedule Type</h3>
+        <div class="recurrence-grid">
+            {% for rec_type, stats in recurrence_stats.items() %}
+            <div class="recurrence-card">
+                <h4>{{ rec_type.title() }} Tasks</h4>
+                <div class="recurrence-stats">
+                    <div>Total: {{ stats.total }}</div>
+                    <div>Completed: {{ stats.completed }}</div>
+                    <div>Pending: {{ stats.total - stats.completed }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="priority-breakdown">
+        <h3>Tasks by Priority</h3>
+        <div class="priority-grid">
+            {% for pri in sorted_priorities %}
+            {% set stats = priority_stats[pri] %}
+            <div class="priority-card priority-{{ pri }}">
+                <h4>{{ pri.replace('_', ' ').title() }}</h4>
+                <div class="priority-stats">
+                    <div>Total: {{ stats.total }}</div>
+                    <div>Completed: {{ stats.completed }}</div>
+                    <div>Pending: {{ stats.pending }}</div>
+                    <div class="overdue-count">Overdue: {{ stats.overdue }}</div>
+                    <div class="completion-rate">Rate: {{ priority_completion_rates[pri] }}%</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Priority-Based Detailed Reports -->
+    <div class="priority-detailed-reports">
+        <h3>Detailed Priority Reports</h3>
+        {% for pri in sorted_priorities %}
+        {% set stats = priority_stats[pri] %}
+        {% set overdue_tasks = priority_overdue[pri] %}
+        {% set recent_tasks = recent_tasks_by_priority[pri] %}
+        
+        <div class="priority-section priority-{{ pri }}">
+            <div class="priority-header">
+                <h4>{{ pri.replace('_', ' ').title() }} Priority Tasks</h4>
+                <div class="priority-summary">
+                    <span class="summary-item">Total: {{ stats.total }}</span>
+                    <span class="summary-item completed">Completed: {{ stats.completed }}</span>
+                    <span class="summary-item pending">Pending: {{ stats.pending }}</span>
+                    <span class="summary-item overdue">Overdue: {{ stats.overdue }}</span>
+                    <span class="summary-item rate">Completion: {{ priority_completion_rates[pri] }}%</span>
+                </div>
+            </div>
+            
+            {% if overdue_tasks %}
+            <div class="priority-overdue">
+                <h5>Overdue Tasks ({{ overdue_tasks|length }})</h5>
+                <div class="overdue-list">
+                    {% for task in overdue_tasks[:5] %}
+                    <div class="overdue-item">
+                        <strong>{{ task.title }}</strong>
+                        <span class="due-date">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</span>
+                        <span class="days-overdue">
+                            {% set days = (task.due_date - today).days %}
+                            {% if days < 0 %}
+                                {{ days * -1 }} days overdue
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                    {% if overdue_tasks|length > 5 %}
+                    <div class="show-more">... and {{ overdue_tasks|length - 5 }} more</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if recent_tasks %}
+            <div class="priority-recent">
+                <h5>Recent Tasks</h5>
+                <div class="recent-list">
+                    {% for task in recent_tasks %}
+                    <div class="recent-item {{ 'completed' if task.completed else 'pending' }}">
+                        <strong>{{ task.title }}</strong>
+                        <span class="task-date">Created: {{ task.created_at.strftime('%m/%d') }}</span>
+                        <span class="task-status">{{ '✓' if task.completed else '○' }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if stats.total > 0 %}
+            <div class="priority-actions">
+                <a href="{{ url_for('search') }}?priority={{ pri }}" class="btn btn-sm btn-outline">View All {{ pri.replace('_', ' ').title() }} Tasks</a>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="report-actions">
+        <div class="export-section">
+            <h4>📅 Export to Calendar</h4>
+            <div class="export-buttons">
+                <a href="{{ url_for('export_calendar') }}" class="btn btn-primary" target="_blank">
+                    📅 Export All Tasks
+                </a>
+                <a href="{{ url_for('export_calendar', priority='very_important') }}" class="btn btn-outline" target="_blank">
+                    🔴 Export Very Important
+                </a>
+                <a href="{{ url_for('export_calendar', priority='should_do') }}" class="btn btn-outline" target="_blank">
+                    🟠 Export Should Do
+                </a>
+                <a href="{{ url_for('export_calendar', priority='normal') }}" class="btn btn-outline" target="_blank">
+                    🟡 Export Normal
+                </a>
+                <a href="{{ url_for('export_calendar', priority='low') }}" class="btn btn-outline" target="_blank">
+                    🟢 Export Low Priority
+                </a>
+            </div>
+        </div>
+        <div class="navigation-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
