@@ -15,15 +15,28 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+
     steps:
-    - name: Checkout code
+    - name: Checkout Code
       uses: actions/checkout@v5
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.11'
 
+    - name: Install Android SDK Licenses
+      run: |
+        # This pipe 'yes' into the license manager to bypass the (y/N) prompt
+        mkdir -p $HOME/.android
+        touch $HOME/.android/repositories.cfg
+        yes | sdkmanager --licenses || true 
+
+    - name: Build with Buildozer
+      run: |
+        # Your existing build command here
+        buildozer android debug
+          
     - name: Install system dependencies
       run: |
         sudo apt-get update
